@@ -1,49 +1,59 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const csvPath = './data/datos.csv'; 
+    const csvPath = 'data/datos.csv'; 
+    const container = document.getElementById('table-container');
+
+    // Estado inicial visual para confirmar que el JS se ejecuta
+    container.innerHTML = '<p>Ejecutando script...</p>';
 
     fetch(csvPath)
         .then(response => {
             if (!response.ok) {
-                throw new Error('No se pudo encontrar el archivo CSV en la ruta especificada.');
+                // Lanza un error específico si el archivo no se encuentra
+                throw new Error(`Error HTTP: ${response.status} - No se encontró el archivo CSV`);
             }
             return response.text();
         })
-        .then(data => {
-            renderTable(data);
+        .then(csvText => {
+            crearTabla(csvText);
         })
-        .catch(error => {
-            console.error('Error:', error);
-            document.getElementById('table-container').innerHTML = 
-                `<p style="color: red;">Error al cargar los datos: ${error.message}</p>`;
+        .catch(err => {
+            console.error('Error detallado:', err);
+            // Muestra el error en la pantalla principal
+            container.innerHTML = `<p style="color: #e74c3c; font-weight: bold; padding: 20px;">
+                ❌ Error detectado: ${err.message}. <br><br>
+                Revisa la consola (F12) o asegúrate de estar corriendo el proyecto con Live Server.
+            </p>`;
         });
 });
 
-function renderTable(csvText) {
+function crearTabla(data) {
     const container = document.getElementById('table-container');
-    const rows = csvText.split('\n').filter(row => row.trim() !== '');
+    const filas = data.split('\n').filter(fila => fila.trim() !== '');
     
-    if (rows.length === 0) {
-        container.innerHTML = '<p>El archivo CSV está vacío.</p>';
+    if (filas.length === 0) {
+        container.innerHTML = '<p>El archivo CSV está vacío o en blanco.</p>';
         return;
     }
 
-    let tableHTML = '<table>';
-
-    rows.forEach((row, index) => {
-        const columns = row.split(',');
-        tableHTML += '<tr>';
-        
-        columns.forEach(col => {
-            if (index === 0) {
-                tableHTML += `<th>${col.trim()}</th>`;
-            } else {
-                tableHTML += `<td>${col.trim()}</td>`;
-            }
-        });
-
-        tableHTML += '</tr>';
+    let htmlBus = '<table><thead><tr>';
+    
+    // Encabezados
+    const encabezados = filas[0].split(',');
+    encabezados.forEach(header => {
+        htmlBus += `<th>${header.trim()}</th>`;
     });
+    htmlBus += '</tr></thead><tbody>';
 
-    tableHTML += '</table>';
-    container.innerHTML = tableHTML;
+    // Filas de datos
+    for (let i = 1; i < filas.length; i++) {
+        const celdas = filas[i].split(',');
+        htmlBus += '<tr>';
+        celdas.forEach(celda => {
+            htmlBus += `<td>${celda.trim()}</td>`;
+        });
+        htmlBus += '</tr>';
+    }
+
+    htmlBus += '</tbody></table>';
+    container.innerHTML = htmlBus;
 }
