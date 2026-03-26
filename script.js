@@ -2,13 +2,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const csvPath = 'data/datos.csv'; 
     const container = document.getElementById('table-container');
 
-    // Estado inicial visual para confirmar que el JS se ejecuta
-    container.innerHTML = '<p>Ejecutando script...</p>';
+    container.innerHTML = '<p>Cargando datos...</p>';
 
     fetch(csvPath)
         .then(response => {
             if (!response.ok) {
-                // Lanza un error específico si el archivo no se encuentra
                 throw new Error(`Error HTTP: ${response.status} - No se encontró el archivo CSV`);
             }
             return response.text();
@@ -18,10 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .catch(err => {
             console.error('Error detallado:', err);
-            // Muestra el error en la pantalla principal
             container.innerHTML = `<p style="color: #e74c3c; font-weight: bold; padding: 20px;">
-                ❌ Error detectado: ${err.message}. <br><br>
-                Revisa la consola (F12) o asegúrate de estar corriendo el proyecto con Live Server.
+                ❌ Error detectado: ${err.message}.
             </p>`;
         });
 });
@@ -31,21 +27,21 @@ function crearTabla(data) {
     const filas = data.split('\n').filter(fila => fila.trim() !== '');
     
     if (filas.length === 0) {
-        container.innerHTML = '<p>El archivo CSV está vacío o en blanco.</p>';
+        container.innerHTML = '<p>El archivo CSV está vacío.</p>';
         return;
     }
 
     let htmlBus = '<table><thead><tr>';
     
-    // Encabezados
     const encabezados = filas[0].split(',');
     encabezados.forEach(header => {
         htmlBus += `<th>${header.trim()}</th>`;
     });
     htmlBus += '</tr></thead><tbody>';
 
-    // Filas de datos
-    for (let i = 1; i < filas.length; i++) {
+    const limite = Math.min(filas.length, 21);
+
+    for (let i = 1; i < limite; i++) {
         const celdas = filas[i].split(',');
         htmlBus += '<tr>';
         celdas.forEach(celda => {
@@ -55,5 +51,13 @@ function crearTabla(data) {
     }
 
     htmlBus += '</tbody></table>';
+    
+    // Si hay más datos ocultos, podemos mostrar un mensajito útil al final
+    if (filas.length > 21) {
+        htmlBus += `<p style="text-align: center; color: #7f8c8d; font-size: 0.9em; margin-top: 10px;">
+            Mostrando las primeras 20 filas de un total de ${filas.length - 1} registros.
+        </p>`;
+    }
+
     container.innerHTML = htmlBus;
 }
